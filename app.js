@@ -101,7 +101,7 @@ async function refresh() {
   lastUpdated = new Date();
   $('updatedAt').textContent = 'Updated ' + lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   status.textContent = stories.length
-    ? `${stories.length} stories from ${state.feeds.length} feed${state.feeds.length > 1 ? 's' : ''} · ${stories.filter(s => isInterested(s) && !isHidden(s)).length} interested · ${stories.filter(isHidden).length} hidden`
+    ? `${stories.length} stories from ${state.feeds.length} feed${state.feeds.length > 1 ? 's' : ''} · ${stories.filter(s => isInterested(s) && !isHidden(s)).length} interested · ${stories.filter(isHidden).length} not interested`
     : 'No stories loaded. Check the feed URLs in Filters & Feeds, then Refresh.';
   render();
 }
@@ -136,9 +136,9 @@ function render() {
       <div class="meta">${hot ? '<span class="badge">★ Interested</span>' : ''}<span>${esc(meta)}</span>
       ${st.commentsUrl ? `<a href="${esc(st.commentsUrl)}" target="_blank" rel="noopener">comments ↗</a>` : ''}</div>
       <div class="actions">
-        <button class="btn" data-act="hide" data-id="${esc(st.id)}">Hide this story</button>
+        <button class="btn" data-act="hide" data-id="${esc(st.id)}">Not interested in this story</button>
         <button class="btn" data-act="block-domain" data-domain="${esc(st.domain)}">Block ${esc(st.domain)}</button>
-        ${isHidden(st) ? `<button class="btn" data-act="unhide" data-id="${esc(st.id)}">Unhide</button>` : ''}
+        ${isHidden(st) ? `<button class="btn" data-act="unhide" data-id="${esc(st.id)}">Undo</button>` : ''}
       </div></li>`;
   }).join('');
   renderChips(); renderFeeds();
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('feedNameInput').value = ''; $('feedUrlInput').value = '';
     save('Saved ✓'); render(); refresh();
   });
-  $('resetHiddenBtn').addEventListener('click', () => { state.hiddenIds = []; save('Saved ✓'); render(); toast('All stories unhidden'); });
+  $('resetHiddenBtn').addEventListener('click', () => { state.hiddenIds = []; save('Saved ✓'); render(); toast('Cleared — all stories are back'); });
   $('exportBtn').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'news-filter-settings.json'; a.click();
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('[data-act]');
     if (!btn) return;
     const st = stories.find(s => s.id === btn.dataset.id);
-    if (btn.dataset.act === 'hide' && st) { state.hiddenIds.push(st.id); save('Saved ✓'); render(); toast('Hidden'); }
+    if (btn.dataset.act === 'hide' && st) { state.hiddenIds.push(st.id); save('Saved ✓'); render(); toast('Marked not interested'); }
     if (btn.dataset.act === 'unhide' && st) { state.hiddenIds = state.hiddenIds.filter(id => id !== st.id); save('Saved ✓'); render(); }
     if (btn.dataset.act === 'block-domain') {
       const d = btn.dataset.domain;

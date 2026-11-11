@@ -12,10 +12,10 @@ Dark mode with red text is the default; use the header toggle for light mode.
   (points + comment counts), with the raw HN RSS feed as fallback.
 - **Add more feeds** — paste any RSS / Atom URL in Filters & Feeds.
 - **Interested list** — stories matching those words go first and get a ★ badge.
-- **Blacklist** — hide stories by keyword, domain, or author. Hidden stories
-  stay in a Hidden tab so you can un-hide them — nothing is deleted.
-- **Per-story actions** — Hide this story, or Block a whole domain.
-- **Search, All / Interested / Hidden tabs, Refresh.**
+- **Blacklist** — hide stories by keyword, domain, or author. Not interested stories
+  stay in a Not interested tab so you can undo them — nothing is deleted.
+- **Per-story actions** — Not interested in this story, or Block a whole domain.
+- **Search, All / Interested / Not interested tabs, Refresh.**
 - **Export / Import settings** as JSON, so lists survive a new phone.
 - Lists are stored only in the browser (`localStorage`). No tracking.
 

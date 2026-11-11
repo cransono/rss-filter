@@ -40,7 +40,7 @@
     </div>
     <div class="card">
       <h2>Not interested — blacklist</h2>
-      <p class="hint">Stories matching these words, domains, or authors are hidden. Tap a chip to remove it.</p>
+      <p class="hint">Stories matching these words, domains, or authors are moved to Not interested. Tap a chip to remove it.</p>
       <div id="blacklistChips" class="chips"></div>
       <div class="add-row">
         <input id="blacklistInput" type="text" placeholder="e.g. crypto, ai agents, twitter.com" autocomplete="off">
@@ -60,7 +60,7 @@
     </div>
   </div>
   <div class="settings-foot">
-    <button id="resetHiddenBtn" class="btn small" type="button">Unhide all stories</button>
+    <button id="resetHiddenBtn" class="btn small" type="button">Clear all Not interested</button>
     <button id="exportBtn" class="btn small" type="button">Export settings</button>
     <label class="btn small file-btn">Import settings <input id="importFile" type="file" accept="application/json" hidden></label>
     <span id="savedNote" class="saved-note" role="status"></span>
@@ -72,7 +72,7 @@
     <div class="tabs" role="tablist" aria-label="Story filter">
       <button id="tabAll" class="tab active" type="button" role="tab" aria-selected="true">All <span id="countAll" class="count"></span></button>
       <button id="tabInterested" class="tab" type="button" role="tab" aria-selected="false">★ Interested <span id="countInterested" class="count"></span></button>
-      <button id="tabHidden" class="tab" type="button" role="tab" aria-selected="false">Hidden <span id="countHidden" class="count"></span></button>
+      <button id="tabHidden" class="tab" type="button" role="tab" aria-selected="false">Not interested <span id="countHidden" class="count"></span></button>
     </div>
     <input id="searchInput" type="search" placeholder="Search titles…" autocomplete="off" aria-label="Search titles">
   </div>
