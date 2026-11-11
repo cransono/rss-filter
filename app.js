@@ -162,7 +162,7 @@ function toast(msg) {
 }
 function addTerms(inputId, listKey, label) {
   const input = $(inputId);
-  const terms = input.value.split(/[,\\n]+/).map(s => s.trim()).filter(Boolean);
+  const terms = input.value.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
   if (!terms.length) return;
   let added = 0;
   for (const t of terms) if (!state[listKey].some(x => norm(x) === norm(t))) { state[listKey].push(t); added++; }
