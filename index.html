@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<meta name="description" content="Filtered Hacker News + RSS reader. Blacklist what you don't want, boost what you do.">
+<title>RSS Filter</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">R</span>
+    <div>
+      <h1>RSS Filter</h1>
+      <p class="sub">Hacker News + your RSS feeds, filtered your way</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button id="refreshBtn" class="btn primary" type="button">↻ Refresh</button>
+    <button id="themeBtn" class="btn" type="button">☀ Light mode</button>
+    <button id="settingsBtn" class="btn" type="button" aria-expanded="false">Filters &amp; Feeds</button>
+  </div>
+</header>
+
+<section id="settings" class="settings" hidden>
+  <div class="settings-grid">
+    <div class="card">
+      <h2>Interested in</h2>
+      <p class="hint">Stories matching these words go to the top and get highlighted. One per line, or comma-separated.</p>
+      <div id="interestedChips" class="chips"></div>
+      <div class="add-row">
+        <input id="interestedInput" type="text" placeholder="e.g. rust, space, batteries" autocomplete="off">
+        <button id="addInterestedBtn" class="btn small" type="button">Add</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Not interested — blacklist</h2>
+      <p class="hint">Stories matching these words, domains, or authors are hidden. Tap a chip to remove it.</p>
+      <div id="blacklistChips" class="chips"></div>
+      <div class="add-row">
+        <input id="blacklistInput" type="text" placeholder="e.g. crypto, ai agents, twitter.com" autocomplete="off">
+        <button id="addBlacklistBtn" class="btn small" type="button">Add</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Feeds</h2>
+      <p class="hint">Hacker News is built in. Add any RSS / Atom feed by URL.</p>
+      <ul id="feedList" class="feed-list"></ul>
+      <div class="add-row">
+        <input id="feedNameInput" type="text" placeholder="Feed name" autocomplete="off">
+        <input id="feedUrlInput" type="url" placeholder="https://example.com/feed.xml" autocomplete="off">
+        <button id="addFeedBtn" class="btn small" type="button">Add feed</button>
+      </div>
+      <p class="hint small">Tip: most blogs, Substacks and news sites publish a feed at /rss, /feed or /atom.xml</p>
+    </div>
+  </div>
+  <div class="settings-foot">
+    <button id="resetHiddenBtn" class="btn small" type="button">Unhide all stories</button>
+    <button id="exportBtn" class="btn small" type="button">Export settings</button>
+    <label class="btn small file-btn">Import settings <input id="importFile" type="file" accept="application/json" hidden></label>
+    <span id="savedNote" class="saved-note" role="status"></span>
+  </div>
+</section>
+
+<main>
+  <div class="controls">
+    <div class="tabs" role="tablist" aria-label="Story filter">
+      <button id="tabAll" class="tab active" type="button" role="tab" aria-selected="true">All <span id="countAll" class="count"></span></button>
+      <button id="tabInterested" class="tab" type="button" role="tab" aria-selected="false">★ Interested <span id="countInterested" class="count"></span></button>
+      <button id="tabHidden" class="tab" type="button" role="tab" aria-selected="false">Hidden <span id="countHidden" class="count"></span></button>
+    </div>
+    <input id="searchInput" type="search" placeholder="Search titles…" autocomplete="off" aria-label="Search titles">
+  </div>
+
+  <p id="status" class="status" role="status">Loading Hacker News…</p>
+  <p id="installHint" class="install-hint" hidden>📱 On Android: Chrome menu → <b>Add to Home screen</b> to install this as an app.</p>
+  <ul id="storyList" class="stories"></ul>
+  <p id="empty" class="empty" hidden>Nothing matches here. Try another tab, clear the search, or loosen the blacklist.</p>
+</main>
+
+<footer class="foot">
+  <span id="updatedAt"></span>
+  <span>Lists are stored only on this device (localStorage). No account, no tracking.</span>
+</footer>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="app.js" defer></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
