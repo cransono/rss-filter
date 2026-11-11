@@ -9,6 +9,7 @@ const defaults = {
   interested: ['rust', 'space', 'batteries'],
   blacklist: ['crypto'],
   hiddenIds: [],
+  viewedIds: [],
   view: 'all',
   theme: 'dark',
 };
@@ -38,7 +39,7 @@ const esc = s => (s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 function haystack(st) { return norm([st.title, st.domain, st.author, st.feedName].join(' ')); }
 function isBlacklisted(st) { return state.blacklist.some(t => t && haystack(st).includes(norm(t))); }
 function isInterested(st) { return state.interested.some(t => t && haystack(st).includes(norm(t))); }
-function isHidden(st) { return state.hiddenIds.includes(st.id) || isBlacklisted(st); }
+function isHidden(st) { return state.hiddenIds.includes(st.id) || (state.viewedIds || []).includes(st.id) || isBlacklisted(st); }
 
 async function fetchHN() {
   try {
@@ -131,7 +132,7 @@ function render() {
       st.domain, st.date ? new Date(st.date).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '',
       st.feedName !== 'Hacker News' ? esc(st.feedName) : '',
     ].filter(Boolean).join(' · ');
-    return `<li class="story${hot ? ' interested' : ''}">
+    return `<li class="story${hot ? ' interested' : ''}" data-id="${esc(st.id)}">
       <h3><a href="${esc(st.url)}" target="_blank" rel="noopener">${esc(st.title)}</a></h3>
       <div class="meta">${hot ? '<span class="badge">★ Interested</span>' : ''}<span>${esc(meta)}</span>
       ${st.commentsUrl ? `<a href="${esc(st.commentsUrl)}" target="_blank" rel="noopener">comments ↗</a>` : ''}</div>
@@ -154,6 +155,52 @@ function renderFeeds() {
   $('feedList').innerHTML = state.feeds.map(f =>
     `<li><span>${esc(f.name)}<small>${esc(f.url)}</small></span>
     ${f.type === 'hn' ? '<span class="hint">built-in</span>' : `<button class="btn small" data-remove-feed="${f.id}" type="button">Remove</button>`}</li>`).join('');
+}
+
+function markViewed(id) {
+  if (!id || (state.viewedIds || []).includes(id)) return;
+  state.viewedIds.push(id);
+  if (state.viewedIds.length > 500) state.viewedIds = state.viewedIds.slice(-500);
+  save(); render();
+}
+
+// Sync link: packs lists + feeds into the URL hash. No account, no server —
+// open the link on another device and it imports everything (last-shared wins).
+function b64urlEncode(str) {
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecode(s) {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+  return decodeURIComponent(escape(atob(b64 + '='.repeat((4 - b64.length % 4) % 4))));
+}
+function syncPayload() {
+  return { v: 1, feeds: state.feeds, interested: state.interested, blacklist: state.blacklist, hiddenIds: state.hiddenIds, viewedIds: state.viewedIds || [] };
+}
+async function copySyncLink() {
+  const url = location.href.split('#')[0] + '#sync=' + b64urlEncode(JSON.stringify(syncPayload()));
+  try { await navigator.clipboard.writeText(url); toast('Sync link copied — open it on your other device'); }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = url; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Sync link copied — open it on your other device'); }
+    catch { prompt('Copy this sync link:', url); }
+    ta.remove();
+  }
+}
+function applySyncLink() {
+  const m = location.hash.match(/^#sync=([A-Za-z0-9\-_]+)$/);
+  if (!m) return false;
+  try {
+    const data = JSON.parse(b64urlDecode(m[1]));
+    if (!data || typeof data !== 'object') throw new Error('bad sync data');
+    if (Array.isArray(data.feeds) && data.feeds.length) state.feeds = data.feeds;
+    if (Array.isArray(data.interested)) state.interested = data.interested;
+    if (Array.isArray(data.blacklist)) state.blacklist = data.blacklist;
+    if (Array.isArray(data.hiddenIds)) state.hiddenIds = data.hiddenIds;
+    if (Array.isArray(data.viewedIds)) state.viewedIds = data.viewedIds;
+    save('Synced ✓');
+    history.replaceState(null, '', location.pathname + location.search);
+    return true;
+  } catch { return 'error'; }
 }
 
 function toast(msg) {
@@ -209,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('feedNameInput').value = ''; $('feedUrlInput').value = '';
     save('Saved ✓'); render(); refresh();
   });
-  $('resetHiddenBtn').addEventListener('click', () => { state.hiddenIds = []; save('Saved ✓'); render(); toast('Cleared — all stories are back'); });
+  $('resetHiddenBtn').addEventListener('click', () => { state.hiddenIds = []; state.viewedIds = []; save('Saved ✓'); render(); toast('Cleared — all stories are back'); });
   $('exportBtn').addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'news-filter-settings.json'; a.click();
@@ -220,6 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
     catch { toast('That file could not be imported'); }
   });
   document.addEventListener('click', e => {
+    const link = e.target.closest('.story a');
+    if (link) { const li = link.closest('.story'); if (li?.dataset.id) markViewed(li.dataset.id); return; }
     const chip = e.target.closest('.chip');
     if (chip) {
       const list = chip.dataset.list;
@@ -232,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!btn) return;
     const st = stories.find(s => s.id === btn.dataset.id);
     if (btn.dataset.act === 'hide' && st) { state.hiddenIds.push(st.id); save('Saved ✓'); render(); toast('Marked not interested'); }
-    if (btn.dataset.act === 'unhide' && st) { state.hiddenIds = state.hiddenIds.filter(id => id !== st.id); save('Saved ✓'); render(); }
+    if (btn.dataset.act === 'unhide' && st) { state.hiddenIds = state.hiddenIds.filter(id => id !== st.id); state.viewedIds = (state.viewedIds || []).filter(id => id !== st.id); save('Saved ✓'); render(); }
     if (btn.dataset.act === 'block-domain') {
       const d = btn.dataset.domain;
       if (d && !state.blacklist.some(x => norm(x) === norm(d))) state.blacklist.push(d);
@@ -240,7 +289,10 @@ document.addEventListener('DOMContentLoaded', () => {
       save('Saved ✓'); render(); toast(`Blocked ${d}`);
     }
   });
-  // Show the Android install hint only when installable-ish / on mobile.
+  $('syncBtn').addEventListener('click', copySyncLink);
+  const syncResult = applySyncLink();
+  if (syncResult === true) toast('Settings synced from your other device');
+  if (syncResult === 'error') toast('That sync link could not be read');
   if (/Android/i.test(navigator.userAgent)) $('installHint').hidden = false;
   applyTheme();
   setView(state.view || 'all');

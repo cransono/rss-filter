@@ -15,7 +15,11 @@ Dark mode with red text is the default; use the header toggle for light mode.
 - **Blacklist** — hide stories by keyword, domain, or author. Not interested stories
   stay in a Not interested tab so you can undo them — nothing is deleted.
 - **Per-story actions** — Not interested in this story, or Block a whole domain.
-- **Search, All / Interested / Not interested tabs, Refresh.**
+- **Viewed auto-hide** — tapping a story marks it viewed and removes it from the
+  feed. Viewed stories sit in the Not interested tab, with Undo to bring one back.
+- **Sync between devices** — Copy sync link packs your lists, feeds, hidden and
+  viewed stories into a link; open it on another device to import. No account or
+  server; whichever device you copy from wins. Export/Import JSON also works.
 - **Export / Import settings** as JSON, so lists survive a new phone.
 - Lists are stored only in the browser (`localStorage`). No tracking.
 
